@@ -99,6 +99,7 @@ export class ExcessiveCancellationsChecker {
     const companyStats = new Map();
 
     for (const [_, company, orderType, quantity] of this.activeIntervalTrades) {
+      if (this.missBehavedCompanies.has(company)) continue;
       if (!companyStats.has(company)) {
         companyStats.set(company, { orders: 0, cancels: 0 });
       }

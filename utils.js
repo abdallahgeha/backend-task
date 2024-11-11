@@ -11,3 +11,9 @@ export class CSVUtils {
     return [timestamp, company, orderType, parseInt(quantityStr)];
   }
 }
+
+export class IntervalUtils {
+  static isWithinSameInterval(startTime, currentTime) {
+    return (currentTime - startTime) / 1000 <= 60;
+  }
+}

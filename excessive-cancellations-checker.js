@@ -1,7 +1,7 @@
 import fs from "fs";
 import readline from "readline/promises";
 import { CANCELLATION, CANCELLATION_THRESHOLD, ORDER } from "./constants";
-import { CSVUtils } from "./utils";
+import { CSVUtils, IntervalUtils } from "./utils";
 
 export class ExcessiveCancellationsChecker {
   /* 
@@ -58,7 +58,10 @@ export class ExcessiveCancellationsChecker {
         }
 
         if (
-          this.#isWithinSameInterval(this.intervalStartTime, currentTime) ||
+          IntervalUtils.isWithinSameInterval(
+            this.intervalStartTime,
+            currentTime
+          ) ||
           timestamp === this.activeIntervalTrades.at(-1)?.[0]
         ) {
           this.activeIntervalTrades.push(parsedData);
@@ -104,10 +107,6 @@ export class ExcessiveCancellationsChecker {
         this.missBehavedCompanies.add(company);
       }
     }
-  }
-
-  #isWithinSameInterval(currentTime) {
-    return (currentTime - this.intervalStartTime) / 1000 <= 60;
   }
 
   #shiftSameTimestampEntries(tradesInterval) {

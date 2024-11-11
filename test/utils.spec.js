@@ -1,4 +1,4 @@
-import { CSVUtils } from "../utils";
+import { CSVUtils, IntervalUtils } from "../utils";
 
 describe("CSVUtils", () => {
   describe("parseCSV", () => {
@@ -24,6 +24,26 @@ describe("CSVUtils", () => {
       const line = "";
       const result = CSVUtils.parseCSV(line);
       expect(result).toBeNull();
+    });
+  });
+});
+
+describe("IntervalUtils", () => {
+  describe("isWithinSameInterval", () => {
+    it("should return true if timestamps are within 60 seconds", () => {
+      const startTime = new Date("2024-11-11T10:00:00Z");
+      const currentTime = new Date("2024-11-11T10:00:30Z"); // 30 seconds later
+      expect(IntervalUtils.isWithinSameInterval(startTime, currentTime)).toBe(
+        true
+      );
+    });
+
+    it("should return false if timestamps are more than 60 seconds apart", () => {
+      const startTime = new Date("2024-11-11T10:00:00Z");
+      const currentTime = new Date("2024-11-11T10:01:01Z"); // 61 seconds later
+      expect(IntervalUtils.isWithinSameInterval(startTime, currentTime)).toBe(
+        false
+      );
     });
   });
 });

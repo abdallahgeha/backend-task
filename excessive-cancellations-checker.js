@@ -1,5 +1,11 @@
 import fs from "fs";
 import readline from "readline/promises";
+import {
+  CANCELLATION,
+  CANCELLATION_THRESHOLD,
+  COMMA_SEPARATOR,
+  ORDER,
+} from "./constants";
 
 export class ExcessiveCancellationsChecker {
   /* 
@@ -80,15 +86,13 @@ export class ExcessiveCancellationsChecker {
   }
 
   #parseCSV(line) {
-    const tradeInfo = line.split(",");
-    if (tradeInfo.length !== 4) return null;
+    const [timestamp, company, orderType, quantityStr] =
+      line.split(COMMA_SEPARATOR);
 
-    const [timestamp, company, orderType, quantityStr] = tradeInfo;
-    const quantity = parseInt(quantityStr, 10);
+    if (!timestamp || !company || !orderType || isNaN(parseInt(quantityStr)))
+      return null;
 
-    if (isNaN(quantity)) return null;
-
-    return [timestamp, company, orderType, quantity];
+    return [timestamp, company, orderType, parseInt(quantityStr)];
   }
 
   #processActiveInterval() {
@@ -100,16 +104,16 @@ export class ExcessiveCancellationsChecker {
       }
 
       const stats = companyStats.get(company);
-      if (orderType === "D") {
+      if (orderType === ORDER) {
         stats.orders += quantity;
-      } else if (orderType === "F") {
+      } else if (orderType === CANCELLATION) {
         stats.cancels += quantity;
       }
     }
 
     for (const [company, { orders, cancels }] of companyStats) {
       const cancelRatio = cancels / (orders + cancels);
-      if (cancelRatio > 1 / 3) {
+      if (cancelRatio > CANCELLATION_THRESHOLD) {
         this.missBehavedCompanies.add(company);
       }
     }

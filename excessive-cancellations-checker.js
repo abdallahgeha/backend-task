@@ -18,7 +18,7 @@ export class ExcessiveCancellationsChecker {
    * Note this should always resolve an array or throw error.
    */
   async companiesInvolvedInExcessiveCancellations() {
-    await this.#loadFile();
+    await this.#processFile();
     return [...this.missBehavedCompanies];
   }
 
@@ -27,7 +27,7 @@ export class ExcessiveCancellationsChecker {
    * Note this should always resolve a number or throw error.
    */
   async totalNumberOfWellBehavedCompanies() {
-    await this.#loadFile();
+    await this.#processFile();
     const goodCompanies = this.#setDifference(
       this.allCompanies,
       this.missBehavedCompanies
@@ -35,7 +35,7 @@ export class ExcessiveCancellationsChecker {
     return [...goodCompanies].length;
   }
 
-  async #loadFile() {
+  async #processFile() {
     const readInterface = readline.createInterface({
       input: fs.createReadStream(this.filePath),
       crlfDelay: Infinity,
@@ -56,13 +56,13 @@ export class ExcessiveCancellationsChecker {
         }
 
         if (
-          !this.#is60SecDifference(this.intervalStartTime, currentTime) ||
+          this.#isWithinSameInterval(this.intervalStartTime, currentTime) ||
           timestamp === this.activeIntervalTrades.at(-1)?.[0]
         ) {
           this.activeIntervalTrades.push(parsedData);
         } else {
-          this.#identifyExcessiveCancelers();
-          this.activeIntervalTrades = this.#shiftSameTimeEntries(
+          this.#processActiveInterval();
+          this.activeIntervalTrades = this.#shiftSameTimestampEntries(
             this.activeIntervalTrades
           );
           this.activeIntervalTrades.push(parsedData);
@@ -70,7 +70,7 @@ export class ExcessiveCancellationsChecker {
       }
 
       if (this.activeIntervalTrades.length > 0) {
-        this.#identifyExcessiveCancelers();
+        this.#processActiveInterval();
       }
     } catch (error) {
       throw error;
@@ -91,7 +91,7 @@ export class ExcessiveCancellationsChecker {
     return [timestamp, company, orderType, quantity];
   }
 
-  #identifyExcessiveCancelers() {
+  #processActiveInterval() {
     const companyStats = new Map();
 
     for (const [_, company, orderType, quantity] of this.activeIntervalTrades) {
@@ -115,11 +115,11 @@ export class ExcessiveCancellationsChecker {
     }
   }
 
-  #is60SecDifference = (date1, date2) => {
-    return (date2 - date1) / 1000 > 60;
-  };
+  #isWithinSameInterval(currentTime) {
+    return (currentTime - this.intervalStartTime) / 1000 <= 60;
+  }
 
-  #shiftSameTimeEntries(tradesInterval) {
+  #shiftSameTimestampEntries(tradesInterval) {
     const firstDate = tradesInterval[0][0];
     let index = 0;
 
@@ -134,6 +134,7 @@ export class ExcessiveCancellationsChecker {
   }
 
   #setDifference(setA, setB) {
+    // Set.difference not available in in node 18
     return new Set([...setA].filter((element) => !setB.has(element)));
   }
 }

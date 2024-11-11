@@ -37,10 +37,7 @@ export class ExcessiveCancellationsChecker {
   }
 
   async #processFile() {
-    const readInterface = readline.createInterface({
-      input: fs.createReadStream(this.filePath),
-      crlfDelay: Infinity,
-    });
+    const readInterface = this.#createReadInterface();
 
     try {
       for await (const line of readInterface) {
@@ -56,13 +53,7 @@ export class ExcessiveCancellationsChecker {
           this.intervalStartTime = currentTime;
         }
 
-        if (
-          IntervalUtils.isWithinSameInterval(
-            this.intervalStartTime,
-            currentTime
-          ) ||
-          timestamp === this.activeIntervalTrades.at(-1)?.[0]
-        ) {
+        if (this.#isSameIntervalOrSameTimestamp(currentTime, timestamp)) {
           this.activeIntervalTrades.push(parsedData);
         } else {
           IntervalUtils.processActiveInterval(
@@ -87,5 +78,19 @@ export class ExcessiveCancellationsChecker {
     } finally {
       readInterface.close();
     }
+  }
+
+  #createReadInterface() {
+    return readline.createInterface({
+      input: fs.createReadStream(this.filePath),
+      crlfDelay: Infinity,
+    });
+  }
+
+  #isSameIntervalOrSameTimestamp(currentTime, timestamp) {
+    return (
+      IntervalUtils.isWithinSameInterval(this.intervalStartTime, currentTime) ||
+      timestamp === this.activeIntervalTrades.at(-1)?.[0]
+    );
   }
 }

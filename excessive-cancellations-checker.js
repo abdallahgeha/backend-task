@@ -2,6 +2,8 @@ import fs from "fs";
 import readline from "readline/promises";
 
 export class ExcessiveCancellationsChecker {
+  isFirstLineRead = false;
+  intervalStartTime;
   allCompanies = new Set();
   /* 
         We provide a path to a file when initiating the class
@@ -35,9 +37,18 @@ export class ExcessiveCancellationsChecker {
     });
 
     readInterface.on("line", (line) => {
-      const trade = this.#parseCSV(line);
+      const parsedData = this.#parseCSV(line);
+      if (!parsedData) return;
 
-      this.allCompanies.add(trade.company);
+      const [timestamp, company] = parsedData
+
+      this.allCompanies.add(company);
+      const currTime = new Date(timestamp);
+
+      if (!this.isFirstLineRead) {
+        this.intervalStartTime = currTime;
+        this.isFirstLineRead = true;
+      }
     });
 
     readInterface.on("close", () => {});

@@ -16,4 +16,18 @@ export class IntervalUtils {
   static isWithinSameInterval(startTime, currentTime) {
     return (currentTime - startTime) / 1000 <= 60;
   }
+
+  static shiftSameTimestampEntries(tradesInterval) {
+    const firstDate = tradesInterval[0][0];
+    let index = 0;
+
+    while (
+      index < tradesInterval.length &&
+      tradesInterval[index][0] === firstDate
+    ) {
+      index++;
+    }
+
+    return tradesInterval.slice(index);
+  }
 }

@@ -67,7 +67,7 @@ export class ExcessiveCancellationsChecker {
           this.activeIntervalTrades.push(parsedData);
         } else {
           this.#processActiveInterval();
-          this.activeIntervalTrades = this.#shiftSameTimestampEntries(
+          this.activeIntervalTrades = IntervalUtils.shiftSameTimestampEntries(
             this.activeIntervalTrades
           );
           this.activeIntervalTrades.push(parsedData);
@@ -107,20 +107,6 @@ export class ExcessiveCancellationsChecker {
         this.missBehavedCompanies.add(company);
       }
     }
-  }
-
-  #shiftSameTimestampEntries(tradesInterval) {
-    const firstDate = tradesInterval[0][0];
-    let index = 0;
-
-    while (
-      index < tradesInterval.length &&
-      tradesInterval[index][0] === firstDate
-    ) {
-      index++;
-    }
-
-    return tradesInterval.slice(index);
   }
 
   #setDifference(setA, setB) {

@@ -46,4 +46,26 @@ describe("IntervalUtils", () => {
       );
     });
   });
+
+  describe("shiftSameTimestampEntries", () => {
+    it("should remove entries with the same timestamp as the first entry", () => {
+      const trades = [
+        ["2024-11-11T10:00:00Z", "CompanyA", "D", 100],
+        ["2024-11-11T10:00:00Z", "CompanyB", "F", 50],
+        ["2024-11-11T10:01:00Z", "CompanyC", "D", 200],
+      ];
+      const result = IntervalUtils.shiftSameTimestampEntries(trades);
+      expect(result).toEqual([["2024-11-11T10:01:00Z", "CompanyC", "D", 200]]);
+    });
+
+    it("should return an empty array if all entries have the same timestamp", () => {
+      const trades = [
+        ["2024-11-11T10:00:00Z", "CompanyA", "D", 100],
+        ["2024-11-11T10:00:00Z", "CompanyB", "F", 50],
+        ["2024-11-11T10:00:00Z", "CompanyC", "D", 200],
+      ];
+      const result = IntervalUtils.shiftSameTimestampEntries(trades);
+      expect(result).toEqual([]);
+    });
+  });
 });

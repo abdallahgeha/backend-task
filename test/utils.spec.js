@@ -99,4 +99,33 @@ describe("IntervalUtils", () => {
       expect(missBehavedCompanies.size).toBe(0); // No company should be added
     });
   });
+
+  describe("setDifference", () => {
+    it("should return the difference between two sets (setA - setB)", () => {
+      const setA = new Set(["CompanyA", "CompanyB"]);
+      const setB = new Set(["CompanyB"]);
+
+      const result = IntervalUtils.setDifference(setA, setB);
+
+      expect(result).toEqual(new Set(["CompanyA"]));
+    });
+
+    it("should return an empty set if all elements of setA are in setB", () => {
+      const setA = new Set(["CompanyA"]);
+      const setB = new Set(["CompanyA"]);
+
+      const result = IntervalUtils.setDifference(setA, setB);
+
+      expect(result.size).toBe(0);
+    });
+
+    it("should return setA if setB is empty (no elements to subtract)", () => {
+      const setA = new Set(["CompanyA"]);
+      const setB = new Set();
+
+      const result = IntervalUtils.setDifference(setA, setB);
+
+      expect(result).toEqual(new Set(["CompanyA"]));
+    });
+  });
 });

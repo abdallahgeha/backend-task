@@ -60,4 +60,9 @@ export class IntervalUtils {
       }
     }
   }
+
+  static setDifference(setA, setB) {
+    // Set.difference not available in in node 18
+    return new Set([...setA].filter((element) => !setB.has(element)));
+  }
 }

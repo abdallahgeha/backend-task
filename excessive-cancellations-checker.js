@@ -1,6 +1,5 @@
 import fs from "fs";
 import readline from "readline/promises";
-import { CANCELLATION, CANCELLATION_THRESHOLD, ORDER } from "./constants";
 import { CSVUtils, IntervalUtils } from "./utils";
 
 export class ExcessiveCancellationsChecker {
@@ -30,7 +29,7 @@ export class ExcessiveCancellationsChecker {
    */
   async totalNumberOfWellBehavedCompanies() {
     await this.#processFile();
-    const goodCompanies = this.#setDifference(
+    const goodCompanies = IntervalUtils.setDifference(
       this.allCompanies,
       this.missBehavedCompanies
     );
@@ -88,10 +87,5 @@ export class ExcessiveCancellationsChecker {
     } finally {
       readInterface.close();
     }
-  }
-
-  #setDifference(setA, setB) {
-    // Set.difference not available in in node 18
-    return new Set([...setA].filter((element) => !setB.has(element)));
   }
 }

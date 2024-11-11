@@ -1,4 +1,9 @@
-import { COMMA_SEPARATOR } from "./constants";
+import {
+  CANCELLATION,
+  CANCELLATION_THRESHOLD,
+  COMMA_SEPARATOR,
+  ORDER,
+} from "./constants";
 
 export class CSVUtils {
   static parseCSV(line) {
@@ -29,5 +34,30 @@ export class IntervalUtils {
     }
 
     return tradesInterval.slice(index);
+  }
+
+  static processActiveInterval(activeTrades, missBehavedCompanies) {
+    const companyStats = new Map();
+
+    for (const [_, company, orderType, quantity] of activeTrades) {
+      if (missBehavedCompanies.has(company)) continue;
+      if (!companyStats.has(company)) {
+        companyStats.set(company, { orders: 0, cancels: 0 });
+      }
+
+      const stats = companyStats.get(company);
+      if (orderType === ORDER) {
+        stats.orders += quantity;
+      } else if (orderType === CANCELLATION) {
+        stats.cancels += quantity;
+      }
+    }
+
+    for (const [company, { orders, cancels }] of companyStats) {
+      const cancelRatio = cancels / (orders + cancels);
+      if (cancelRatio > CANCELLATION_THRESHOLD) {
+        missBehavedCompanies.add(company);
+      }
+    }
   }
 }

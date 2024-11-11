@@ -68,4 +68,35 @@ describe("IntervalUtils", () => {
       expect(result).toEqual([]);
     });
   });
+
+  describe("processActiveInterval", () => {
+    it("should add companies with excessive cancellations to missBehavedCompanies set (more than one-third cancellations)", () => {
+      const activeTrades = [
+        ["2024-11-11T10:00:00Z", "CompanyA", "D", 100], // Orders
+        ["2024-11-11T10:01:00Z", "CompanyA", "F", 60], // Cancellations
+        ["2024-11-11T10:02:00Z", "CompanyB", "D", 200], // Orders
+        ["2024-11-11T10:03:00Z", "CompanyB", "F", 50], // Cancellations
+      ];
+
+      const missBehavedCompanies = new Set();
+
+      IntervalUtils.processActiveInterval(activeTrades, missBehavedCompanies);
+
+      expect(missBehavedCompanies.has("CompanyA")).toBe(true); // CompanyA has >33% cancellations
+      expect(missBehavedCompanies.has("CompanyB")).toBe(false); // CompanyB has <=33% cancellations
+    });
+
+    it("should not add companies with no cancellations to missBehavedCompanies set (0% cancellations)", () => {
+      const activeTrades = [
+        ["2024-11-11T10:00:00Z", "CompanyA", "D", 100], // Orders only
+        ["2024-11-11T10:01:00Z", "CompanyB", "D", 200], // Orders only
+      ];
+
+      const missBehavedCompanies = new Set();
+
+      IntervalUtils.processActiveInterval(activeTrades, missBehavedCompanies);
+
+      expect(missBehavedCompanies.size).toBe(0); // No company should be added
+    });
+  });
 });

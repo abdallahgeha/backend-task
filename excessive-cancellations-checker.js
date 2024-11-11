@@ -66,7 +66,10 @@ export class ExcessiveCancellationsChecker {
         ) {
           this.activeIntervalTrades.push(parsedData);
         } else {
-          this.#processActiveInterval();
+          IntervalUtils.processActiveInterval(
+            this.activeIntervalTrades,
+            this.missBehavedCompanies
+          );
           this.activeIntervalTrades = IntervalUtils.shiftSameTimestampEntries(
             this.activeIntervalTrades
           );
@@ -75,37 +78,15 @@ export class ExcessiveCancellationsChecker {
       }
 
       if (this.activeIntervalTrades.length > 0) {
-        this.#processActiveInterval();
+        IntervalUtils.processActiveInterval(
+          this.activeIntervalTrades,
+          this.missBehavedCompanies
+        );
       }
     } catch (error) {
       throw error;
     } finally {
       readInterface.close();
-    }
-  }
-
-  #processActiveInterval() {
-    const companyStats = new Map();
-
-    for (const [_, company, orderType, quantity] of this.activeIntervalTrades) {
-      if (this.missBehavedCompanies.has(company)) continue;
-      if (!companyStats.has(company)) {
-        companyStats.set(company, { orders: 0, cancels: 0 });
-      }
-
-      const stats = companyStats.get(company);
-      if (orderType === ORDER) {
-        stats.orders += quantity;
-      } else if (orderType === CANCELLATION) {
-        stats.cancels += quantity;
-      }
-    }
-
-    for (const [company, { orders, cancels }] of companyStats) {
-      const cancelRatio = cancels / (orders + cancels);
-      if (cancelRatio > CANCELLATION_THRESHOLD) {
-        this.missBehavedCompanies.add(company);
-      }
     }
   }
 

@@ -1,11 +1,7 @@
 import fs from "fs";
 import readline from "readline/promises";
-import {
-  CANCELLATION,
-  CANCELLATION_THRESHOLD,
-  COMMA_SEPARATOR,
-  ORDER,
-} from "./constants";
+import { CANCELLATION, CANCELLATION_THRESHOLD, ORDER } from "./constants";
+import { CSVUtils } from "./utils";
 
 export class ExcessiveCancellationsChecker {
   /* 
@@ -49,7 +45,7 @@ export class ExcessiveCancellationsChecker {
 
     try {
       for await (const line of readInterface) {
-        const parsedData = this.#parseCSV(line);
+        const parsedData = CSVUtils.parseCSV(line);
         if (!parsedData) continue;
 
         const [timestamp, company] = parsedData;
@@ -83,16 +79,6 @@ export class ExcessiveCancellationsChecker {
     } finally {
       readInterface.close();
     }
-  }
-
-  #parseCSV(line) {
-    const [timestamp, company, orderType, quantityStr] =
-      line.split(COMMA_SEPARATOR);
-
-    if (!timestamp || !company || !orderType || isNaN(parseInt(quantityStr)))
-      return null;
-
-    return [timestamp, company, orderType, parseInt(quantityStr)];
   }
 
   #processActiveInterval() {

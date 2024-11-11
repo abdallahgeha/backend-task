@@ -2,21 +2,17 @@ import fs from "fs";
 import readline from "readline/promises";
 
 export class ExcessiveCancellationsChecker {
-  isFirstLineRead = false;
-  intervalStartTime;
-
-  allCompanies = new Set();
-  missBehavedCompanies = new Set();
-
-  activeMinInterval = [];
   /* 
         We provide a path to a file when initiating the class
         you have to use it in your methods to solve the task
     */
   constructor(filePath) {
     this.filePath = filePath;
+    this.allCompanies = new Set();
+    this.missBehavedCompanies = new Set();
+    this.activeIntervalTrades = [];
+    this.intervalStartTime = null;
   }
-
   /**
    * Returns the list of companies that are involved in excessive cancelling.
    * Note this should always resolve an array or throw error.
@@ -53,28 +49,27 @@ export class ExcessiveCancellationsChecker {
         const [timestamp, company] = parsedData;
 
         this.allCompanies.add(company);
-        const currTime = new Date(timestamp);
+        const currentTime = new Date(timestamp);
 
-        if (!this.isFirstLineRead) {
-          this.intervalStartTime = currTime;
-          this.isFirstLineRead = true;
+        if (!this.intervalStartTime) {
+          this.intervalStartTime = currentTime;
         }
 
         if (
-          !this.#is60SecDifference(this.intervalStartTime, currTime) ||
-          timestamp === this.activeMinInterval.at(-1)?.[0]
+          !this.#is60SecDifference(this.intervalStartTime, currentTime) ||
+          timestamp === this.activeIntervalTrades.at(-1)?.[0]
         ) {
-          this.activeMinInterval.push(parsedData);
+          this.activeIntervalTrades.push(parsedData);
         } else {
           this.#identifyExcessiveCancelers();
-          this.activeMinInterval = this.#shiftSameTimeEntries(
-            this.activeMinInterval
+          this.activeIntervalTrades = this.#shiftSameTimeEntries(
+            this.activeIntervalTrades
           );
-          this.activeMinInterval.push(parsedData);
+          this.activeIntervalTrades.push(parsedData);
         }
       }
 
-      if (this.activeMinInterval.length > 0) {
+      if (this.activeIntervalTrades.length > 0) {
         this.#identifyExcessiveCancelers();
       }
     } catch (error) {
@@ -99,7 +94,7 @@ export class ExcessiveCancellationsChecker {
   #identifyExcessiveCancelers() {
     const companyStats = new Map();
 
-    for (const [_, company, orderType, quantity] of this.activeMinInterval) {
+    for (const [_, company, orderType, quantity] of this.activeIntervalTrades) {
       if (!companyStats.has(company)) {
         companyStats.set(company, { orders: 0, cancels: 0 });
       }

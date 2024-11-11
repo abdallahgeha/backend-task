@@ -34,11 +34,21 @@ export class ExcessiveCancellationsChecker {
     });
 
     readInterface.on("line", (line) => {
-      console.log(line);
+      const trade = this.#parseCSV(line);
     });
 
-    readInterface.on("close", () => {
-      console.log("closed");
-    });
+    readInterface.on("close", () => {});
+  }
+
+  #parseCSV(line) {
+    const tradeInfo = line.split(",");
+    if (tradeInfo.length !== 4) return null;
+
+    const [timestamp, company, orderType, quantityStr] = tradeInfo;
+    const quantity = parseInt(quantityStr, 10);
+
+    if (isNaN(quantity)) return null;
+
+    return [timestamp, company, orderType, quantity];
   }
 }

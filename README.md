@@ -60,7 +60,11 @@ Good luck!
 
 ### Installation
 
-To use this class, ensure you have `Node.js` v18 installed on your machine. You will also need the following dependencies.  
+To use this class, ensure you have `Node.js` v18 installed on your machine check [Download NodeJS](https://nodejs.org/en/download/package-manager).  
+
+- Run `npm install` in the root of the project
+- To test: `npm test` will run test with jest.
+You will also need the following dependencies  but they come with `node`.  
 
 ### Dependencies
 

@@ -2,6 +2,7 @@ import fs from "fs";
 import readline from "readline/promises";
 
 export class ExcessiveCancellationsChecker {
+  allCompanies = new Set();
   /* 
         We provide a path to a file when initiating the class
         you have to use it in your methods to solve the task
@@ -35,6 +36,8 @@ export class ExcessiveCancellationsChecker {
 
     readInterface.on("line", (line) => {
       const trade = this.#parseCSV(line);
+
+      this.allCompanies.add(trade.company);
     });
 
     readInterface.on("close", () => {});

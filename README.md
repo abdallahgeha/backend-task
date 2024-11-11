@@ -55,3 +55,72 @@ Your solution must use/be compatible with Node.js version `18`.
 ##
 
 Good luck!
+
+## Solution
+
+### Installation
+
+To use this class, ensure you have `Node.js` v18 installed on your machine. You will also need the following dependencies.  
+
+### Dependencies
+
+- `fs`: Built-in Node.js module for file system operations.
+- `readline/promises`: Built-in Node.js module for reading files line by line asynchronously.  
+- No 3rd party library was installed.  
+
+### High-Level Explanation of the File Processing Logic
+
+The `ExcessiveCancellationsChecker` class processes a CSV file line by line to identify companies that are involved in excessive cancellations of orders. The processing is designed to handle large files efficiently by reading them incrementally, without loading the entire file into memory at once. Here's a high-level breakdown of how the file processing works:
+
+#### 1. Initialization
+
+When an instance of the `ExcessiveCancellationsChecker` class is created, it initializes several key properties:
+
+- **filePath**: The path to the CSV file containing trade data.
+- **allCompanies**: A Set that stores all companies encountered during the file processing.
+- **missBehavedCompanies**: A Set that stores companies identified as having excessive cancellations.
+- **activeIntervalTrades**: An array that temporarily holds trades occurring within a 60-second window.
+- **intervalStartTime**: Tracks the start time of the current 60-second interval.
+
+#### 2. Reading the File Line by Line
+
+The method `#processFile()` is responsible for reading the CSV file line by line using Node.js's readline/promises module. This approach allows for memory-efficient processing, especially when dealing with large files.
+
+For each line in the file:
+
+- The line is parsed using `CSVUtils.parseCSV()`, which extracts relevant fields (timestamp, company, order type, and quantity).
+- If the line is valid, the parsed data is used to analyze trades and cancellations.
+
+#### 3. Tracking Time Intervals
+
+The core logic revolves around grouping trades into 60-second intervals and analyzing them in batches. For each trade:
+
+- **First Trade in an Interval**:
+If this is the first trade being processed or if it starts a new interval, its timestamp becomes the `intervalStartTime`.
+The trade is added to `activeIntervalTrades`.
+- **Subsequent Trades**:
+If a subsequent trade occurs within the same 60-second window as `intervalStartTime`, it is added to `activeIntervalTrades`.
+If a trade occurs outside of this 60-second window (i.e., more than 60 seconds after intervalStartTime), the current interval is processed before moving on to the next one.
+
+#### 4. Processing Active Intervals
+
+When an interval ends (i.e., when a new trade falls outside of the current 60-second window), all trades in that interval are analyzed together:
+
+- The method `IntervalUtils.processActiveInterval()` calculates how many orders and cancellations were made by each company during that interval.
+- For each company, if more than one-third of their transactions are cancellations, they are flagged as "miss-behaved" and added to the missBehavedCompanies set.
+
+After processing an interval:
+
+- The trades that occurred at exactly the same timestamp as the last trade are retained for further analysis (to avoid missing trades that happen at boundary times).
+- The next trade starts a new interval.
+
+#### 5. Final Processing
+
+After all lines in the file have been read, any remaining trades in `activeIntervalTrades` are processed one last time to ensure no unprocessed intervals remain.  
+
+#### 6. Results
+
+Once all lines have been processed:
+
+- The method `companiesInvolvedInExcessiveCancellations()` returns a list of companies that exhibited excessive cancellations.
+- The method `totalNumberOfWellBehavedCompanies()` calculates how many companies did not exhibit excessive cancellations by comparing all encountered companies (allCompanies) with those flagged as "miss-behaved" (`missBehavedCompanies`).  

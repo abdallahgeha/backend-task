@@ -96,4 +96,17 @@ export class ExcessiveCancellationsChecker {
   #is60SecDifference = (date1, date2) => {
     return (date2 - date1) / 1000 > 60;
   };
+
+  #shiftSameTimeEntries(tradesInterval) {
+    if (data.length === 0) return data;
+
+    const firstDate = data[0][0];
+    let index = 0;
+
+    while (index < data.length && data[index][0] === firstDate) {
+      index++;
+    }
+
+    return data.slice(index);
+  }
 }

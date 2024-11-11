@@ -7,6 +7,7 @@ export class ExcessiveCancellationsChecker {
 
   allCompanies = new Set();
   missBehavedCompanies = new Set();
+
   activeMinInterval = [];
   /* 
         We provide a path to a file when initiating the class
@@ -14,7 +15,6 @@ export class ExcessiveCancellationsChecker {
     */
   constructor(filePath) {
     this.filePath = filePath;
-    this.#loadFile();
   }
 
   /**
@@ -22,7 +22,8 @@ export class ExcessiveCancellationsChecker {
    * Note this should always resolve an array or throw error.
    */
   async companiesInvolvedInExcessiveCancellations() {
-    //TODO Implement...
+    await this.#loadFile();
+    return [...this.missBehavedCompanies];
   }
 
   /**
@@ -30,31 +31,57 @@ export class ExcessiveCancellationsChecker {
    * Note this should always resolve a number or throw error.
    */
   async totalNumberOfWellBehavedCompanies() {
-    //TODO Implement...
+    await this.#loadFile();
+    const goodCompanies = this.#setDifference(
+      this.allCompanies,
+      this.missBehavedCompanies
+    );
+    return [...goodCompanies].length;
   }
 
-  #loadFile() {
+  async #loadFile() {
     const readInterface = readline.createInterface({
       input: fs.createReadStream(this.filePath),
       crlfDelay: Infinity,
     });
 
-    readInterface.on("line", (line) => {
-      const parsedData = this.#parseCSV(line);
-      if (!parsedData) return;
+    try {
+      for await (const line of readInterface) {
+        const parsedData = this.#parseCSV(line);
+        if (!parsedData) continue;
 
-      const [timestamp, company] = parsedData;
+        const [timestamp, company] = parsedData;
 
-      this.allCompanies.add(company);
-      const currTime = new Date(timestamp);
+        this.allCompanies.add(company);
+        const currTime = new Date(timestamp);
 
-      if (!this.isFirstLineRead) {
-        this.intervalStartTime = currTime;
-        this.isFirstLineRead = true;
+        if (!this.isFirstLineRead) {
+          this.intervalStartTime = currTime;
+          this.isFirstLineRead = true;
+        }
+
+        if (
+          !this.#is60SecDifference(this.intervalStartTime, currTime) ||
+          timestamp === this.activeMinInterval.at(-1)?.[0]
+        ) {
+          this.activeMinInterval.push(parsedData);
+        } else {
+          this.#identifyExcessiveCancelers();
+          this.activeMinInterval = this.#shiftSameTimeEntries(
+            this.activeMinInterval
+          );
+          this.activeMinInterval.push(parsedData);
+        }
       }
-    });
 
-    readInterface.on("close", () => {});
+      if (this.activeMinInterval.length > 0) {
+        this.#identifyExcessiveCancelers();
+      }
+    } catch (error) {
+      throw error;
+    } finally {
+      readInterface.close();
+    }
   }
 
   #parseCSV(line) {
@@ -98,15 +125,20 @@ export class ExcessiveCancellationsChecker {
   };
 
   #shiftSameTimeEntries(tradesInterval) {
-    if (data.length === 0) return data;
-
-    const firstDate = data[0][0];
+    const firstDate = tradesInterval[0][0];
     let index = 0;
 
-    while (index < data.length && data[index][0] === firstDate) {
+    while (
+      index < tradesInterval.length &&
+      tradesInterval[index][0] === firstDate
+    ) {
       index++;
     }
 
-    return data.slice(index);
+    return tradesInterval.slice(index);
+  }
+
+  #setDifference(setA, setB) {
+    return new Set([...setA].filter((element) => !setB.has(element)));
   }
 }
